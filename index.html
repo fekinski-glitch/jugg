@@ -1,1 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+  />
+  <title>My Telegram Mini App</title>
 
+  <!-- Официальный SDK Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--tg-theme-bg-color, #ffffff);
+      color: var(--tg-theme-text-color, #111111);
+    }
+
+    body {
+      min-height: var(--tg-viewport-stable-height, 100vh);
+      padding:
+        calc(16px + env(safe-area-inset-top))
+        16px
+        calc(16px + env(safe-area-inset-bottom));
+    }
+
+    .app {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--tg-theme-secondary-bg-color, #f4f4f5);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 24px;
+      line-height: 1.2;
+      margin: 0 0 12px;
+    }
+
+    p {
+      margin: 0 0 12px;
+      line-height: 1.5;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #ffffff);
+    }
+
+    button:active {
+      opacity: 0.8;
+    }
+
+    .muted {
+      color: var(--tg-theme-hint-color, #707579);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <h1>Привет из Mini App 👋</h1>
+      <p id="user-info">Загружаю данные пользователя…</p>
+      <p class="muted" id="platform-info"></p>
+    </div>
+
+    <div class="card">
+      <p>Это базовый шаблон. Дальше можно добавлять свою логику, API и экраны.</p>
+      <button id="action-button">Нажми меня</button>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+
+    function initTelegramApp() {
+      if (!tg) {
+        document.getElementById("user-info").textContent =
+          "Откройте приложение через Telegram, чтобы получить данные пользователя.";
+        return;
+      }
+
+      // Сообщаем Telegram, что приложение готово
+      tg.ready();
+
+      // Разворачиваем на весь доступный экран
+      tg.expand();
+
+      // Цвета шапки/фона под тему Telegram
+      if (tg.setHeaderColor) {
+        tg.setHeaderColor("secondary_bg_color");
+      }
+      if (tg.setBackgroundColor) {
+        tg.setBackgroundColor("bg_color");
+      }
+
+      // Данные пользователя
+      const user = tg.initDataUnsafe?.user;
+      const userInfo = document.getElementById("user-info");
+
+      if (user) {
+        const name = [user.first_name, user.last_name].filter(Boolean).join(" ");
+        userInfo.textContent = `Пользователь: ${name || "без имени"}${user.username ? ` (@${user.username})` : ""}`;
+      } else {
+        userInfo.textContent = "Данные пользователя недоступны.";
+      }
+
+      document.getElementById("platform-info").textContent =
+        `Платформа: ${tg.platform || "unknown"} · Версия: ${tg.version || "unknown"}`;
+
+      // Кнопка внутри страницы
+      const actionButton = document.getElementById("action-button");
+      actionButton.addEventListener("click", () => {
+        if (tg.HapticFeedback) {
+          tg.HapticFeedback.impactOccurred("light");
+        }
+        tg.showAlert("Кнопка работает ✅");
+      });
+
+      // Главная кнопка Telegram внизу
+      if (tg.MainButton) {
+        tg.MainButton.setText("Продолжить");
+        tg.MainButton.show();
+
+        tg.MainButton.onClick(() => {
+          if (tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred("medium");
+          }
+          tg.showAlert("Нажата MainButton");
+        });
+      }
+
+      // Реакция на смену темы
+      if (tg.onEvent) {
+        tg.onEvent("themeChanged", () => {
+          console.log("Telegram theme changed");
+        });
+      }
+    }
+
+    initTelegramApp();
+  </script>
+</body>
+</html>
